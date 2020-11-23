@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd">
+	<wsc:config name="Web_Service_Consumer_Config" doc:name="Web Service Consumer Config" doc:id="dff09b7d-e2b8-448d-a65f-4670bde786b7" >
+		<wsc:connection wsdlLocation="wsdl\global-weather.wsdl" service="GlobalWeather" port="GlobalWeatherSoap12" address="http://localhost:8080/GlobalWeather" soapVersion="SOAP12"/>
+	</wsc:config>
+	<configuration doc:name="Configuration" doc:id="34569b68-9b8b-46e5-8946-a83d80fbcef1" defaultErrorHandler-ref="globalError_Handler" />
+	<configuration-properties doc:name="Configuration properties" doc:id="1e63f67e-543f-4336-98b3-ef6ba52adbb6" file="${mule.env}.yaml" />
+	<global-property doc:name="Global Property" doc:id="286237bb-1bfc-493d-b8d4-6b6c6a8998ed" name="mule.env" value="dev" />
+	<error-handler name="globalError_Handler" doc:id="5798a260-c3a7-494b-af03-1ba047e2611a" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="17021d29-49b7-4654-9e36-4599bb59d7a2" >
+			<logger level="INFO" doc:name="Logger" doc:id="2c9bf386-9235-461f-a92e-b4d650cf3daa" message="#[payload]"/>
+		</on-error-propagate>
+	</error-handler>
+</mule>

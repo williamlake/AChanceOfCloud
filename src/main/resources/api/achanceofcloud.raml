@@ -1,0 +1,60 @@
+#%RAML 1.0
+title: AChanceOfCloud
+description: Weather REST API, SOAP Integration
+version: 1
+protocols:
+  - HTTP
+
+traits:
+  ErrorTrait: !include Library/Traits/ErrorTrait.raml
+  
+securitySchemes:
+  BasicAuth: !include Library/Security/Security.raml
+  
+/weather:
+  displayName: Global Weather
+  description: |
+    Global Weather Retrieval for a given City within a Country
+  get:
+    securedBy: [BasicAuth]
+    queryParameters:
+      country:
+        description: Name of Country
+        type: string
+        required: false
+      city:
+        description: Name of City
+        type: string
+        required: false
+    is: [ErrorTrait]
+    responses: 
+      200: 
+        description: successful response
+        body:
+          application/json:
+            type: !include Library/Types/WeatherType.raml
+            examples: !include Library/Examples/WeatherResponse.raml
+            
+       
+/cities:
+  displayName: Cities by Country
+  description: |
+    Retrieve a list of cities within the specified country
+  get:
+    securedBy: [BasicAuth]
+    queryParameters:
+      country:
+        description: Name of Country
+        type: string
+        required: false
+    is: [ErrorTrait]
+    responses: 
+      200: 
+        description: successful response
+        body:
+          application/json:
+            type: array
+            items: !include Library/Types/CityType.raml
+            examples: !include Library/Examples/CityResponse.raml
+
+  

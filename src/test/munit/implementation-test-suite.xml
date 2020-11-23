@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="implementation-test-suite.xml" />
+	<munit:test name="GlobalWeatherFlowTest-SoapFaultTest" doc:id="557aba8d-048c-42fd-8ddf-3739b1de034d" description="Test" expectedErrorType="ANY">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="19c8bebf-88de-40c5-a0f2-c077b7d9609f" processor="wsc:consume">
+			<munit-tools:with-attributes>
+				<munit-tools:with-attribute whereValue="GetWeather" attributeName="operation" />
+			</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="WSC:SOAP_FAULT" />
+				</munit-tools:then-return>
+		</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="Flow-ref to GlobalWeatherFlow" doc:id="eea987ef-1a76-4477-9045-dfc23e482757" name="GlobalWeatherFlow" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="e3b87dd4-4889-4afd-9ffd-8531d8d7a8f3" actual="#[vars.httpStatus as String]" expected="#[500 as String]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="GlobalWeatherFlowTest-NotFoundTest" doc:id="7cbe18e6-ebc1-4c0b-900b-77b6b48dd97d" description="Test" expectedErrorType="ANY">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="4bacacf9-eecc-4db5-89ee-745fc505be96" processor="wsc:consume">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="GetWeather" attributeName="operation" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to GlobalWeatherFlow" doc:id="fb84ea13-cb74-4eee-9d2e-bfc6ab6d6fc3" name="GlobalWeatherFlow"/>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="0c2e45c4-65fd-4fb6-a3be-8b0df3ada968" actual="#[vars.httpStatus as String]" expected="#[400 as String]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="CitiesByCountryFlowTest-SoapFaultTest" doc:id="18e7f3ed-8f3b-4b25-b2dd-bae5aea19cc8" description="Test" expectedErrorType="ANY">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="2c64db18-0109-4caa-9575-00144fa7e674" processor="wsc:consume">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="GetCitiesByCountry" attributeName="operation" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="WSC:SOAP_FAULT" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to CitiesByCountryFlow" doc:id="ad7d8099-d42c-481f-ae9a-80b497ad301c" name="CitiesByCountryFlow"/>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="f470b5ad-2f91-4d64-8123-b09bf8f4465e" actual="#[vars.httpStatus as String]" expected="#[500 as String]"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="CitiesByCountryFlowTest-NotFoundTest" doc:id="b8ba8da5-6dee-4c89-8d7c-85eeb3da2af6" description="Test" expectedErrorType="ANY">
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock when" doc:id="f23a93e8-407a-4f35-b03e-903eae8b81f7" processor="wsc:consume">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute whereValue="GetCitiesByCountry" attributeName="operation" />
+				</munit-tools:with-attributes>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="Flow-ref to CitiesByCountryFlow" doc:id="8f6d14d4-2444-4db5-b25f-e181ad0691bf" name="CitiesByCountryFlow" />
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="2719be2a-3aa3-4628-b0ca-62dda7d70cc8" actual="#[vars.httpStatus as String]" expected="#[400 as String]" />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="GlobalWeatherFlowTest-SuccessFlow" doc:id="2c83a399-8ad8-4cfa-b28a-9c1b5b54e8bb">
+			<munit:behavior>
+				<munit:set-event doc:name="Set Input" doc:id="e8866c79-e5b3-4323-955d-cdcfda2d48c9">
+					<munit:payload value="#[readUrl('classpath://GlobalWeatherFlowTestSuccessFlow\set-event_payload.dwl')]" encoding="UTF-8" />
+					<munit:attributes value="#[readUrl('classpath://GlobalWeatherFlowTestSuccessFlow\set-event_attributes.dwl')]" />
+					<munit:variables>
+						<munit:variable key="outboundHeaders" value="#[readUrl('classpath://GlobalWeatherFlowTestSuccessFlow\set-event_variable_.dwl')]" />
+					</munit:variables>
+				</munit:set-event>
+			</munit:behavior>
+			<munit:execution>
+				<flow-ref doc:name="Flow-ref to GlobalWeatherFlow" doc:id="c6542d3d-8e8e-4888-99e5-402030df456c" name="GlobalWeatherFlow" />
+			</munit:execution>
+			<munit:validation>
+				<munit-tools:assert doc:name="Assert payload" doc:id="4c2981ed-0cc9-4643-b11b-01aeca5dfdff" message="The payload does not match">
+					<munit-tools:that><![CDATA[#[%dw 2.0
+import GlobalWeatherFlowTestSuccessFlow::assert_expression_payload
+---
+assert_expression_payload::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+				</munit-tools:assert>
+			</munit:validation>
+		</munit:test>
+	<munit:test name="CitiesByCountryFlowTest-SuccessFlow" doc:id="c4d0156c-3a9a-4eac-9ebb-de703de989f1" >
+		<munit:behavior >
+			<munit:set-event doc:name="Set Input" doc:id="2c8f1bc1-cbdf-422b-af02-2766cf539970" >
+				<munit:payload value="#[readUrl('classpath://CitiesByCountryFlowTestSuccessFlow\set-event_payload.dwl')]" encoding="UTF-8" />
+				<munit:attributes value="#[readUrl('classpath://CitiesByCountryFlowTestSuccessFlow\set-event_attributes.dwl')]" />
+				<munit:variables >
+					<munit:variable key="outboundHeaders" value="#[readUrl('classpath://CitiesByCountryFlowTestSuccessFlow\set-event_variable_.dwl')]" />
+				</munit:variables>
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to CitiesByCountryFlow" doc:id="3e11a292-7c91-4d14-8639-e1efc1d6d026" name="CitiesByCountryFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert doc:name="Assert payload" doc:id="5a26cc8a-dd22-4fde-ac7f-ea5ebeff2cb1" message="The payload does not match">
+				<munit-tools:that ><![CDATA[#[%dw 2.0
+import CitiesByCountryFlowTestSuccessFlow::assert_expression_payload
+---
+assert_expression_payload::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+			</munit-tools:assert>
+		</munit:validation>
+	</munit:test>
+
+
+</mule>

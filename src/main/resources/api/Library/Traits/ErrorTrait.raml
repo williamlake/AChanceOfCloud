@@ -1,0 +1,31 @@
+#%RAML 1.0 Trait
+uses:
+  errorResponse: !include ../../Library/Examples/WeatherResponse.raml
+
+responses:
+ 400:
+    description: Invalid input data
+    body:
+      application/json:
+        type: !include ../../Library/Types/ErrorType.raml
+        example:
+          Error: Not Found    
+          Description: No data found for given input, ensure input values are valid
+        
+ 401:
+  description: Invalid credentials
+  body:
+    application/json:
+      type: !include ../../Library/Types/ErrorType.raml
+      example: 
+        Error: Unauthorized    
+        Description: Unauthorised user, ensure credentials are correct
+      
+ 500:
+  description: Internal Server Error
+  body:
+    application/json:
+      type: !include ../../Library/Types/ErrorType.raml
+      example: 
+        Error: Internal Server Error    
+        Description: An internal error occured, please try again later

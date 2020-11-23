@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:xml-module="http://www.mulesoft.org/schema/mule/xml-module"
+	xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/xml-module http://www.mulesoft.org/schema/mule/xml-module/current/mule-xml-module.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+	<ee:object-store-caching-strategy name="Weather_Caching_Strategy" doc:name="Caching Strategy" doc:id="61d1e3a6-7a4a-4e5b-95ed-53600c20a4eb" />
+	<ee:object-store-caching-strategy name="Cities_Caching_Strategy" doc:name="Caching Strategy" doc:id="2ba12dcf-9ba5-4a77-9847-ca6747c283c5" />
+	<flow name="GlobalWeatherFlow" doc:id="77833181-3ed6-45f9-95f1-b44943f70612" >
+		<ee:cache doc:name="Cache" doc:id="d7f5d6c8-5fed-4d0d-8016-c969a36e84d2" cachingStrategy-ref="Weather_Caching_Strategy">
+			<wsc:consume doc:name="Consume GetWeather Service" doc:id="b0669a17-85d5-4ef0-83d8-f63ce1c258a2" config-ref="Web_Service_Consumer_Config" operation="GetWeather">
+			<wsc:message>
+				<wsc:body><![CDATA[#[output application/xml
+ns web http://www.webserviceX.NET
+---
+{
+	web#GetWeather: {
+		web#CityName: attributes.queryParams.city,
+		web#CountryName: attributes.queryParams.country
+	}
+}]]]></wsc:body>
+			</wsc:message>
+			<wsc:message-customizations forceXMLProlog="true" />
+		</wsc:consume>
+			<validation:is-not-blank-string doc:name="Is not empty payload" doc:id="9e1750a1-b363-4f78-9fdf-d7ad389e34df" value='#[%dw 2.0
+output application/json
+ns ns0 http://www.webserviceX.NET
+var outp = payload.body.ns0#GetWeatherResponse as String replace /&lt;!\[CDATA\[/ with "" replace /\]\]&gt;\n/ 
+	with "" replace /&amp;lt;/ with "&lt;" replace /&amp;gt;/ with "&gt;" default ""
+---
+outp]'/>
+			<ee:transform doc:name="Transform Output JSON" doc:id="c2f34cd3-c60d-4ddf-91c9-ccce00e989f9">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+ns ns0 http://www.webserviceX.NET
+var outp = payload.body.ns0#GetWeatherResponse as String replace /<!\[CDATA\[/ with "" replace /\]\]>\n/ 
+	with "" replace /&lt;/ with "<" replace /&gt;/ with ">"
+var data = read(outp as CData, "application/xml")
+---
+data.NewDataSet
+
+
+
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		</ee:cache>
+		<logger level="INFO" doc:name="Log Success" doc:id="652d49cb-9b3c-41bc-bc96-1c2e9e934d54" message="#[payload]" />
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="c5cccbeb-944a-4502-9947-93659d121052" type="VALIDATION:BLANK_STRING, WSC:BAD_REQUEST, EXPRESSION">
+				<set-variable value="400" doc:name="Set HTTP Status" doc:id="7d8bd639-5151-4305-a63a-2289f53e7ad3" variableName="httpStatus"/>
+				<ee:transform doc:name="Produce Error Message" doc:id="d7f9e15a-d9ee-49bd-a104-13acb97bb75d" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	Error: "Not Found" ,  
+	Description: "No data found for given input, ensure input values are valid"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Log Error" doc:id="eacb2ed4-8367-4cc8-8172-ff84d385da60" message="#[payload]"/>
+			</on-error-continue>
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="55c6ccd7-7445-4d2a-99fd-58de3120c1e4" type="WSC:BAD_RESPONSE, WSC:CONNECTIVITY, WSC:INVALID_WSDL, WSC:RETRY_EXHAUSTED, WSC:SOAP_FAULT, WSC:TIMEOUT" >
+				<set-variable value="500" doc:name="Set HTTP Status" doc:id="c4efae3a-ef72-45ec-9993-ca69afe2edb2" variableName="httpStatus" />
+				<ee:transform doc:name="Produce Error Message" doc:id="7ea5f7d9-1786-4098-92ba-90eff8c74cc6">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	Error: "Internal Server Error",
+    Description: "An internal error occured, please try again later"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Log Error" doc:id="55ce9e8c-6f1e-4fe8-8dfa-91b9471f8023" message="#[payload]"/>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="CitiesByCountryFlow" doc:id="a9542fdd-5175-4a56-8a7e-2b2d496e68c6" >
+		<ee:cache doc:name="Cache" doc:id="10971e19-c297-4a96-bf67-54eda293a49b" cachingStrategy-ref="Cities_Caching_Strategy">
+			<wsc:consume doc:name="Consume GetCitiesByCountry Service" doc:id="64814734-14ac-4671-aecd-21cb79bbaa83" config-ref="Web_Service_Consumer_Config" operation="GetCitiesByCountry">
+			<wsc:message>
+				<wsc:body><![CDATA[#[output application/xml
+ns web http://www.webserviceX.NET
+---
+{
+	web#GetCitiesByCountry: {
+		web#CountryName: attributes.queryParams.country
+	}
+}]]]></wsc:body>
+			</wsc:message>
+		</wsc:consume>
+			<validation:is-not-blank-string doc:name="Is not blank string" doc:id="0b9f5bb6-53d8-4fd5-ac88-64f6da3824a6" value='#[%dw 2.0
+output application/json
+ns ns0 http://www.webserviceX.NET
+var outp = payload.body.ns0#GetCitiesByCountryResponse as String replace /&lt;!\[CDATA\[/ with "" replace /\]\]&gt;\n/ with "" 
+	replace /&amp;lt;/ with "&lt;" replace /&amp;gt;/ with "&gt;" default ""
+---
+outp]'/>
+			<ee:transform doc:name="Transform Output JSON" doc:id="af94e0d2-6f28-434c-81e4-bdee2b4b691a">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+ns ns0 http://www.webserviceX.NET
+var outp = payload.body.ns0#GetCitiesByCountryResponse as String replace /<!\[CDATA\[/ with "" replace /\]\]>\n/ with "" replace /&lt;/ with "<" replace /&gt;/ with ">"
+var data = read(outp as CData, "application/xml")
+---
+data.NewDataSet.*Table map (item, index) -> 
+ 	{
+	 	Country: item.Country, 
+	 	City: item.City
+ 	}
+
+	
+
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		</ee:cache>
+		<logger level="INFO" doc:name="Log Success" doc:id="f4431845-8690-4d7e-89cb-e8050566a285" message="#[payload]" />
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="8a34437b-f1a0-4948-8795-f59799c7355b" type="VALIDATION:BLANK_STRING, WSC:BAD_REQUEST, EXPRESSION" >
+				<set-variable value="400" doc:name="Set HTTP Status" doc:id="66e2d5f8-a62b-4b65-8f63-bfc0df5aef5e" variableName="httpStatus" />
+				<ee:transform doc:name="Produce Error Message" doc:id="cff92aa5-1e02-4f18-bcb5-13026d3c6915" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	Error: "Not Found" ,  
+	Description: "No data found for given input, ensure input values are valid"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Log Error" doc:id="1d105426-4bda-4fec-9034-c667f9acf407" message="#[payload]" />
+			</on-error-continue>
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="7521da36-8633-4bdd-80fa-b6f957e59a7e" type="WSC:BAD_RESPONSE, WSC:CONNECTIVITY, WSC:INVALID_WSDL, WSC:RETRY_EXHAUSTED, WSC:SOAP_FAULT, WSC:TIMEOUT" >
+				<set-variable value="500" doc:name="Set HTTP Status" doc:id="6791d101-fabd-4dbd-8463-bd9474e10630" variableName="httpStatus" />
+				<ee:transform doc:name="Produce Error Message" doc:id="705b9df1-a268-476f-8a98-3d93b6e81fad" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	Error: "Internal Server Error",
+    Description: "An internal error occured, please try again later"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Log Error" doc:id="4b6a4b44-cc01-4ac0-8020-402bc54f6bcd" message="#[payload]" />
+			</on-error-continue>
+		</error-handler>
+	</flow>
+</mule>
