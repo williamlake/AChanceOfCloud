@@ -2,7 +2,7 @@
 Simple API that exposes two Weather webservices via REST interfaces
 
 The Filesystem can be imported into Anypoint Studio via the Import Anypoint Studio Project From File System option. Ensure the Filesystem is placed
-within your Anypoint Studio workspace
+within your Anypoint Studio workspace.
 
 The RAML API Specification Files can be found within \src\main\resources\api. 
 
